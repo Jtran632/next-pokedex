@@ -1,3 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 html,
 body {
   padding: 0;
@@ -21,6 +24,16 @@ a {
   }
   body {
     color: white;
-    background: black;
+    background-image: url(https://i.redd.it/d7e1x414hax51.gif);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    padding: 0;
+  }
+  .leftScreen {
+    background-image: url(https://c4.wallpaperflare.com/wallpaper/15/453/148/pokemon-ruby-version-wallpaper-preview.jpg);
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
   }
 }
