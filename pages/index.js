@@ -1,14 +1,80 @@
 /* eslint-disable @next/next/no-img-element */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../styles/Home.module.css";
 const Pokedex = require("pokeapi-js-wrapper");
 const P = new Pokedex.Pokedex();
-export default function Home({ res }) {
+export default function Home({ res, initialData, initialDesc }) {
+  const [poke, setPoke] = useState(1);
+  const [descList, setDescList] = useState(initialDesc);
+  const [fixedDesc, setFixedDesc] = useState(
+    initialDesc[0].flavor_text.replace(/(\r\n|\n|\r|\f)/gm, " ")
+  );
+  const [descGame, setDescGame] = useState(initialDesc[0].version.name);
   const [selectedPokemon, setSelectedPokemon] = useState({
-    name: res[0].name,
+    name: initialData.name,
+    ability: initialData.abilities,
+    types: initialData.types,
+    stats: {
+      Hp: initialData.stats[0].base_stat,
+      Attack: initialData.stats[1].base_stat,
+      Defense: initialData.stats[2].base_stat,
+      SpecialAttack: initialData.stats[3].base_stat,
+      SpecialDefence: initialData.stats[4].base_stat,
+      Speed: initialData.stats[5].base_stat,
+    },
+    sprites: {
+      normalFront: initialData.sprites.front_default,
+      normalBack: initialData.sprites.back_default,
+      shinyFront: initialData.sprites.front_shiny,
+      shinyBack: initialData.sprites.back_shiny,
+    },
+    items: initialData.held_items,
   });
+  const [infoButton, setInfoButton] = useState("notShiny");
+  useEffect(() => {
+    const pokeSetter = async () => {
+      let response = await P.getPokemonByName(poke).then(function (r) {
+        return r;
+      });
+      setSelectedPokemon({
+        name: response.name,
+        ability: response.abilities,
+        types: response.types,
+        stats: {
+          Hp: response.stats[0].base_stat,
+          Attack: response.stats[1].base_stat,
+          Defense: response.stats[2].base_stat,
+          SpecialAttack: response.stats[3].base_stat,
+          SpecialDefence: response.stats[4].base_stat,
+          Speed: response.stats[5].base_stat,
+        },
+        sprites: {
+          normalFront: response.sprites.front_default,
+          normalBack: response.sprites.back_default,
+          shinyFront: response.sprites.front_shiny,
+          shinyBack: response.sprites.back_shiny,
+        },
+        items: response.held_items,
+      });
+    };
+    const descSetter = async () => {
+      var desc = await P.getPokemonSpeciesByName(poke).then(
+        function (response) {
+          return Object.values(response.flavor_text_entries).filter(
+          (i) => i.language.name === "en"
+          );
+        }
+        );
+        setFixedDesc(desc[0].flavor_text.replace(/(\r\n|\n|\r|\f)/gm, " "));
+      }
+
+    console.log(selectedPokemon);
+    pokeSetter();
+    descSetter();
+  }, [poke]);
+
   const [shiny, setShiny] = useState("red");
   const [urlPoke, setUrlPoke] = useState(
     `https://projectpokemon.org/images/normal-sprite/bulbasaur.gif`
@@ -19,6 +85,7 @@ export default function Home({ res }) {
 
   //alot of special cases where getting gifs from projectpokemon from pokeapi names don't mix well because of different naming conventions usually having to do with hyphens (-)
   async function checkPokemon(props, index) {
+    setPoke(props);
     var s = props;
     var baseUrl = "https://projectpokemon.org/images/normal-sprite/";
     var baseUrlShiny = "https://projectpokemon.org/images/shiny-sprite/";
@@ -28,9 +95,6 @@ export default function Home({ res }) {
       baseUrlShiny =
         "https://projectpokemon.org/images/sprites-models/swsh-shiny-sprites/";
     }
-    P.getPokemonByName(props).then(function (response) {
-      console.log(response);
-    });
     if (props.includes("nido") === true || props.includes("mime-jr") === true) {
       s = props.replace("-", "_");
     }
@@ -79,31 +143,27 @@ export default function Home({ res }) {
     if (props.includes("mr-rime") === true) {
       special = 2;
     }
-    console.log(s);
-    console.log(special);
     switch (special) {
       case 1:
-        console.log("mime");
         setUrlPoke(
           `https://projectpokemon.org/images/normal-sprite/mr.mime.gif`
         );
         setUrlPokeShiny(
           `https://projectpokemon.org/images/shiny-sprite/mr._mime.gif`
         );
-        return setSelectedPokemon({ name: s });
+        return setPoke(index);
       case 2:
-        console.log("rime");
         setUrlPoke(
           `https://projectpokemon.org/images/sprites-models/swsh-normal-sprites/mr.rime.gif`
         );
         setUrlPokeShiny(
           `https://projectpokemon.org/images/sprites-models/swsh-shiny-sprites/mr.rime.gif`
         );
-        return setSelectedPokemon({ name: s });
+        return setPoke(index);
       default:
         setUrlPoke(baseUrl + `${s}.gif`);
         setUrlPokeShiny(baseUrlShiny + `${s}.gif`);
-        return setSelectedPokemon({ name: s });
+        setPoke(index);
     }
   }
 
@@ -128,33 +188,38 @@ export default function Home({ res }) {
               </li>
             </div>
 
-            <div className="col-span-12 text-black border-b-4 h-0 border-black p-1 justify-center flex">
-              <div className=" text-black border-8 border-black items-end pb-10 flex w-11/12 bg-white justify-center mt-14 h-72 leftScreen ">
-                {shiny === "red" ? (
-                  <Image
-                    src={urlPoke}
-                    alt="pokemon gif"
-                    width={100}
-                    height={100}
-                    placeholder={"/notFound.png"}
-                    className=" w-auto h-auto scale-150"
-                  ></Image>
-                ) : (
-                  <Image
-                    src={urlPokeShiny}
-                    alt="pokemon gif"
-                    width={100}
-                    height={100}
-                    className=" w-auto h-auto scale-150"
-                  ></Image>
-                )}
+            <div className="col-span-12 text-black border-b-4 h-0 border-black pt-2 justify-center flex">
+              <div
+                div
+                className=" text-black border border-black items-end pb-8 flex w-11/12 bg-white justify-center mt-14 h-64 rounded-md"
+              >
+                <div className=" text-black border-2 border-black items-end pb-10 flex w-11/12 bg-white justify-center mt-14 h-48 leftScreen ">
+                  {shiny === "red" ? (
+                    <Image
+                      src={urlPoke}
+                      alt="pokemon gif"
+                      width={100}
+                      height={100}
+                      placeholder={"/notFound.png"}
+                      className=" w-auto h-auto scale-150"
+                    ></Image>
+                  ) : (
+                    <Image
+                      src={urlPokeShiny}
+                      alt="pokemon gif"
+                      width={100}
+                      height={100}
+                      className=" w-auto h-auto scale-150"
+                    ></Image>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* <div className="row-start-5 col-start-1 col-end-4 text-black pt-10 flex justify-center mt-4 mr-4">
               <div className="border-4 border-double border-gray-900 h-14 w-14 rounded-full bg-black"></div>
             </div> */}
-            <div className="row-start-5 col-start-3 col-end-10 text-black flex justify-center gap-3">
+            <div className="row-start-5 col-start-2 col-end-12 text-black flex justify-center gap-5 pb-8">
               {shiny === "red" ? (
                 <div
                   className="border-2 border-black h-4 w-12 rounded-3xl bg-rose-400"
@@ -179,14 +244,14 @@ export default function Home({ res }) {
               )}
             </div>
 
-            <div className="grid-col-2 row-start-5 col-start-2 col-end-12 text-black pt-2 justify-center mt-4 ">
+            <div className="grid-col-2 row-start-5 col-start-2 col-end-12 text-black justify-center mt-4 pt-2 ">
               <div className="grid">
                 <ul className="border-4 border-b-0 border-black h-40 w-full rounded-t-md  overflow-y-scroll divide-y-2 divide-green-800 text-md capitalize font-semibold">
                   {res.map((i, index) => (
                     <li
                       key={i.name}
                       className="flex items-center justify-between bg-green-600 hover:bg-green-300 pl-2 pr-2"
-                      onClick={() => checkPokemon(i.name, index + 1)}
+                      onClick={async () => checkPokemon(i.name, index + 1)}
                     >
                       <div>#{index + 1}</div>
                       <div>{i.name}</div>
@@ -216,8 +281,91 @@ export default function Home({ res }) {
             </div> */}
           </ul>
 
-          <ul className="grid grid-cols-12 grid-rows-6 border-2 border-l-4 border-black w-96 max-h-3/4 min-w-fill h-3/4 bg-gradient-to-l from-red-700 to-red-800 rounded-r-md">
-            To Do Stats and pages
+          <ul className="grid grid-rows-6 w-96 max-h-3/4 min-w-fill h-3/4 bg-gradient-to-l text-black">
+            <div className=" row-start-2 row-end-7 border-4 border-l-8 border-black bg-gradient-to-l from-red-700 to-red-800 mt-2">
+              {/* Makes uses 4/6 rows to make it look like a pokedex */}
+              <div className="grid grid-rows-6 grid-cols-8 h-full">
+                <ul className=" flex justify-center col-span-full row-start-6 row-end-7 w-full">
+                  <button className=" w-20 h-8 border-2 border-black rounded-l-lg bg-green-400 flex justify-center items-center">
+                    Info
+                  </button>
+                  <button className=" w-20 h-8 border-2 border-black  bg-green-400 flex justify-center items-center">
+                    Stats
+                  </button>
+                  <button className=" w-20 h-8 border-2 border-black  bg-green-400 flex justify-center items-center">
+                    Desc
+                  </button>
+                  <button className=" w-20 h-8 border-2 border-black rounded-r-lg bg-green-400 flex justify-center items-center">
+                    Cry
+                  </button>
+                </ul>
+
+                <div className="col-span-full row-start-1 row-end-6 border-8 m-4  bg-white border-black border-double">
+                  <></>
+                  <div className="grid grid-cols-3 grid-rows-4 h-full justify-center  items-center p-1">
+                    <></>
+                    <div className="row-start-1 row-end-3 col-start-1 col-end-4 h-full flex border-4 border-gray-800">
+                      <div className="grid grid-cols-10 grid-rows-6 w-full items-center">
+                        <div className="col-span-full row-span-1 flex justify-center bg-blue-300 mb-3 font-bold">
+                          {" "}
+                          Info
+                        </div>
+                        {infoButton === "notShiny" ? (
+                          <div className="col-span-full place-content-center row-start-2 row-end-5 flex zoom">
+                            <img
+                              src={selectedPokemon.sprites.normalFront}
+                              alt="front sprite"
+                            ></img>
+                            <img
+                              src={selectedPokemon.sprites.normalBack}
+                              alt="back sprite"
+                            ></img>
+                          </div>
+                        ) : (
+                          <div className="col-span-full place-content-center row-start-2 row-end-5 flex zoom">
+                            <img
+                              src={selectedPokemon.sprites.shinyFront}
+                              alt="front sprite"
+                              className="zoom"
+                            ></img>
+                            <img
+                              src={selectedPokemon.sprites.shinyBack}
+                              alt="back sprite"
+                            ></img>
+                          </div>
+                        )}
+                        <div className="col-span-full row-span-2 flex justify-evenly bg-blue-300 mt-7 font-bold">
+                          <div className="grid grid-cols-2 text-sm w-full">
+                            <button
+                              className="border border-black"
+                              onClick={() => setInfoButton("notShiny")}
+                            >
+                              Regular
+                            </button>
+                            <button
+                              className="border border-black"
+                              onClick={() => setInfoButton("shiny")}
+                            >
+                              Shiny{" "}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <></>
+                    <></>
+                    <div className="row-start-3 row-end-5 col-start-1 col-end-4 h-full flex border-2 border-black w-full">
+                      <div className="grid grid-cols-2 grid-rows-2 border-4 border-green-400 w-full">
+                        <div className="col-span-full row-span-2 overflow-y-hidden font-semibold p-1">
+                          {fixedDesc}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <></>
+              </div>
+            </div>
           </ul>
         </div>
       </main>
@@ -225,16 +373,28 @@ export default function Home({ res }) {
   );
 }
 
-export async function getStaticProps(context) {
+export async function getStaticProps() {
   const interval = {
     offset: 0,
     limit: 898,
   };
-  return P.getPokemonsList(interval).then(function (response) {
-    let res = response.results;
-    console.log(res);
-    return {
-      props: { res }, // will be passed to the page component as props
-    };
+  const res = await P.getPokemonsList(interval).then(function (response) {
+    return response.results;
   });
+
+  const initialData = await P.getPokemonByName(res[0].name).then(function (
+    response
+  ) {
+    return response;
+  });
+  var initialDesc = await P.getPokemonSpeciesByName(res[0].name).then(function (
+    response
+  ) {
+    return Object.values(response.flavor_text_entries).filter(
+      (i) => i.language.name === "en"
+    );
+  });
+  return {
+    props: { res, initialData, initialDesc }, // will be passed to the page component as props
+  };
 }

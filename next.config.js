@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     loader: "default",
-    domains: ["veekun.com", "projectpokemon.org"],
+    domains: ["veekun.com", "projectpokemon.org", "raw.githubusercontent.com"],
   },
 };
 

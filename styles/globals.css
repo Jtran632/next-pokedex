@@ -36,4 +36,10 @@ a {
     background-repeat: no-repeat;
     background-position: center center;
   }
+  .zoom img:hover {
+    scale: 2;
+    margin-left: 20px;
+    background-repeat: no-repeat;
+    z-index: 1;
+  }
 }
