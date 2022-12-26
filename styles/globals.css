@@ -18,6 +18,7 @@ a {
   box-sizing: border-box;
 }
 
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
@@ -37,9 +38,18 @@ a {
     background-position: center center;
   }
   .zoom img:hover {
-    scale: 2;
-    margin-left: 20px;
-    background-repeat: no-repeat;
+    scale: 1.5;
     z-index: 1;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }

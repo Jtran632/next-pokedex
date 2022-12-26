@@ -8,45 +8,24 @@ export default function PokedexLeftScreenSearch({
 }) {
   const [pokeFilter, setPokeFilter] = useState("");
   const PokemonList = () => {
-    console.log(res)
     let filtered = res.filter((i) => i.name.includes(pokeFilter));
     return (
-      <div>
-        {pokeFilter.length === 0
-          ? res.map((i) => (
-              <li
-                key={i.name}
-                className="flex items-center justify-between bg-green-600 hover:bg-green-300 pl-2 pr-2"
-                onClick={async () => checkPokemon(i.name, i.id)}
-              >
-                <div>#{i.id}</div>
-                <div>{i.name}</div>
-                <img
-                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${
-                    i.id
-                  }.png`}
-                  onError={() => (this.img.src = notFound)}
-                  alt="pokemon icon"
-                />
-              </li>
-            ))
-          : filtered.map((i) => (
-              <li
-                key={i.name}
-                className="flex items-center justify-between bg-green-600 hover:bg-green-300 pl-2 pr-2"
-                onClick={async () => checkPokemon(i.name, i.id)}
-              >
-                <div>#{i.id}</div>
-                <div>{i.name}</div>
-                <img
-                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${
-                    i.id
-                  }.png`}
-                  onError={() => (this.img.src = notFound)}
-                  alt="pokemon icon"
-                />
-              </li>
-            ))}
+      <div className="border-4 border-b-0 border-black h-40 w-full rounded-t-md  overflow-y-scroll divide-y-2 divide-green-100 text-md capitalize font-semibold bg-green-600 no-scrollbar">
+        {filtered.map((i) => (
+          <li
+            key={i.name}
+            className="flex items-center justify-between bg-green-600 hover:bg-green-300 pl-2 pr-2"
+            onClick={async () => checkPokemon(i.name, i.id)}
+          >
+            <div>#{i.id}</div>
+            <div>{i.name}</div>
+            <img
+              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-viii/icons/${i.id}.png`}
+              onError={() => (this.img.src = notFound)}
+              alt="pokemon icon"
+            />
+          </li>
+        ))}
       </div>
     );
   };
@@ -78,9 +57,7 @@ export default function PokedexLeftScreenSearch({
       </div>
       <div className="grid-col-2 row-start-5 col-start-2 col-end-12 text-black justify-center mt-4 pt-2 ">
         <div className="grid">
-          <ul className="border-4 border-b-0 border-black h-40 w-full rounded-t-md  overflow-y-scroll divide-y-2 divide-green-200 text-md capitalize font-semibold bg-green-600">
-            <PokemonList />
-          </ul>
+          <PokemonList />
           <input
             className="border-4 border-black rounded-b-md bg-gray-400 text-center"
             onChange={(e) => setPokeFilter(e.target.value)}

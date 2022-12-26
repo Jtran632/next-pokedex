@@ -1,13 +1,10 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState, useEffect } from "react";
-import Head from "next/head";
-import Image from "next/image";
-import styles from "../styles/Home.module.css";
-import InfoScreenBottom from "../components/infoScreenBottom";
-import InfoScreenTop from "../components/infoScreenTop";
 import PokedexTopLeft from "../components/pokedexTopLeft";
 import PokedexLeftScreen from "../components/pokedexLeftScreen";
 import PokedexLeftScreenSearch from "../components/pokedexLeftScreenSearch";
+import SwitchPokedexRightScreen from "../components/switchPokedexRightScreen";
+import OptionButtons from "../components/optionButtons";
 const Pokedex = require("pokeapi-js-wrapper");
 const P = new Pokedex.Pokedex();
 export default function Home({ res, initialData, initialDesc }) {
@@ -18,6 +15,7 @@ export default function Home({ res, initialData, initialDesc }) {
   );
   const [descGame, setDescGame] = useState(initialDesc[0].version.name);
   const [selectedPokemon, setSelectedPokemon] = useState({
+    id: initialData.id,
     name: initialData.name,
     ability: initialData.abilities,
     types: initialData.types,
@@ -36,8 +34,9 @@ export default function Home({ res, initialData, initialDesc }) {
       shinyBack: initialData.sprites.back_shiny,
     },
     items: initialData.held_items,
+    height: (initialData.height * 0.328084).toFixed(1),
+    weight: (initialData.weight * 0.220462).toFixed(2),
   });
-
   const [urlPoke, setUrlPoke] = useState(
     `https://projectpokemon.org/images/normal-sprite/bulbasaur.gif`
   );
@@ -52,6 +51,7 @@ export default function Home({ res, initialData, initialDesc }) {
         return r;
       });
       setSelectedPokemon({
+        id: response.id,
         name: response.name,
         ability: response.abilities,
         types: response.types,
@@ -70,6 +70,8 @@ export default function Home({ res, initialData, initialDesc }) {
           shinyBack: response.sprites.back_shiny,
         },
         items: response.held_items,
+        height: (response.height * 0.328084).toFixed(1),
+        weight: (response.weight * 0.220462).toFixed(2),
       });
     };
     const descSetter = async () => {
@@ -80,10 +82,9 @@ export default function Home({ res, initialData, initialDesc }) {
           (i) => i.language.name === "en"
         );
       });
+      setDescList(desc)
       setFixedDesc(desc[0].flavor_text.replace(/(\r\n|\n|\r|\f)/gm, " "));
     };
-
-    console.log(selectedPokemon);
     pokeSetter();
     descSetter();
   }, [poke]);
@@ -196,27 +197,17 @@ export default function Home({ res, initialData, initialDesc }) {
             <div className=" row-start-2 row-end-7 border-4 border-l-8 border-black bg-gradient-to-l from-red-700 to-red-800 mt-2">
               {/* Makes uses 4/6 rows to make it look like a pokedex */}
               <div className="grid grid-rows-6 grid-cols-8 h-full">
-                <ul className=" flex justify-center col-span-full row-start-6 row-end-7 w-full">
-                  <button className=" w-20 h-8 border-2 border-black rounded-l-lg bg-green-400 flex justify-center items-center">
-                    Info
-                  </button>
-                  <button className=" w-20 h-8 border-2 border-black  bg-green-400 flex justify-center items-center">
-                    Stats
-                  </button>
-                  <button className=" w-20 h-8 border-2 border-black  bg-green-400 flex justify-center items-center">
-                    Desc
-                  </button>
-                  <button className=" w-20 h-8 border-2 border-black rounded-r-lg bg-green-400 flex justify-center items-center">
-                    Cry
-                  </button>
-                </ul>
-
-                <div className="col-span-full row-start-1 row-end-6 border-8 m-4  bg-white border-black border-double">
-                  <div className="grid grid-cols-3 grid-rows-4 h-full justify-center  items-center p-1">
-                    <InfoScreenTop selectedPokemon={selectedPokemon} />
-                    <InfoScreenBottom fixedDesc={fixedDesc} />
-                  </div>
-                </div>
+                <SwitchPokedexRightScreen
+                  optionsRight={optionsRight}
+                  selectedPokemon={selectedPokemon}
+                  fixedDesc={fixedDesc}
+                  setFixedDesc={setFixedDesc}
+                  descList={descList}
+                />
+                <OptionButtons
+                  optionsRight={optionsRight}
+                  setOptionsRight={setOptionsRight}
+                />
               </div>
             </div>
           </ul>
@@ -235,11 +226,11 @@ export async function getStaticProps() {
     return response.results;
   });
   //add id to result for tracking
-  var res = r
+  var res = r;
   res.forEach((item, i) => {
     item.id = i + 1;
   });
-  console.log(res);
+  // console.log(res);
   const initialData = await P.getPokemonByName(res[0].name).then(function (
     response
   ) {
@@ -252,7 +243,7 @@ export async function getStaticProps() {
       (i) => i.language.name === "en"
     );
   });
-  console.log(res);
+  console.log(initialDesc);
   return {
     props: { res, initialData, initialDesc }, // will be passed to the page component as props
   };
