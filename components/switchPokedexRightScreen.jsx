@@ -2,12 +2,14 @@ import InfoScreenBottom from "./infoScreenBottom";
 import InfoScreenTop from "./infoScreenTop";
 import DescScreenTop from "./descScreenTop";
 import DescScreenBottom from "./descScreenBottom";
+import CryScreen from "./cryScreen";
+import StatsTop from "./statsScreen";
 export default function SwitchPokedexRightScreen({
   selectedPokemon,
   fixedDesc,
   setFixedDesc,
   optionsRight,
-  descList
+  descList,
 }) {
   const RenderSwitch = () => {
     switch (optionsRight) {
@@ -22,17 +24,26 @@ export default function SwitchPokedexRightScreen({
         return (
           <div className="grid grid-cols-3 grid-rows-4 h-full justify-center  items-center p-1 ">
             <DescScreenTop fixedDesc={fixedDesc} />
-            <DescScreenBottom fixedDesc={fixedDesc} setFixedDesc={setFixedDesc} descList={descList} />
+            <DescScreenBottom
+              fixedDesc={fixedDesc}
+              setFixedDesc={setFixedDesc}
+              descList={descList}
+            />
           </div>
         );
       case "stats":
-        return <div>hello</div>;
+        return <StatsTop selectedPokemon={selectedPokemon} className="" />;
       case "cry":
-        return <div></div>;
+        return (
+          <div className="grid grid-cols-3 grid-rows-4 h-full justify-center  items-center p-1 ">
+            <InfoScreenTop selectedPokemon={selectedPokemon} />
+            <CryScreen selectedPokemon={selectedPokemon} />
+          </div>
+        );
     }
   };
   return (
-    <div className="col-span-full row-start-1 row-end-6 border-8 m-4  bg-white border-black border-double">
+    <div className="col-span-full row-start-1 row-end-6 border-8 m-4 bg-white border-black border-double">
       <RenderSwitch />
     </div>
   );

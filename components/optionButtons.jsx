@@ -1,5 +1,4 @@
 export default function OptionButtons({ optionsRight, setOptionsRight }) {
-  const options = ["info", "desc", "stats", "cry"];
   return (
     <ul className=" flex justify-center col-span-full row-start-6 row-end-7 w-full">
       {optionsRight === "info" ? (

@@ -7,7 +7,14 @@ import SwitchPokedexRightScreen from "../components/switchPokedexRightScreen";
 import OptionButtons from "../components/optionButtons";
 const Pokedex = require("pokeapi-js-wrapper");
 const P = new Pokedex.Pokedex();
-export default function Home({ res, initialData, initialDesc }) {
+export default function Home({
+  res,
+  initialData,
+  initialSpecies,
+  initialDesc,
+  initialGenera,
+}) {
+  // console.log(initialSpecies);
   const [poke, setPoke] = useState(1);
   const [descList, setDescList] = useState(initialDesc);
   const [fixedDesc, setFixedDesc] = useState(
@@ -23,8 +30,8 @@ export default function Home({ res, initialData, initialDesc }) {
       Hp: initialData.stats[0].base_stat,
       Attack: initialData.stats[1].base_stat,
       Defense: initialData.stats[2].base_stat,
-      SpecialAttack: initialData.stats[3].base_stat,
-      SpecialDefence: initialData.stats[4].base_stat,
+      "Sp.Atk": initialData.stats[3].base_stat,
+      "Sp.Def": initialData.stats[4].base_stat,
       Speed: initialData.stats[5].base_stat,
     },
     sprites: {
@@ -36,6 +43,10 @@ export default function Home({ res, initialData, initialDesc }) {
     items: initialData.held_items,
     height: (initialData.height * 0.328084).toFixed(1),
     weight: (initialData.weight * 0.220462).toFixed(2),
+    habitat: initialSpecies.habitat.name,
+    shape: initialSpecies.shape.name,
+    eggGroup: initialSpecies.egg_groups,
+    genera: initialGenera[0].genus,
   });
   const [urlPoke, setUrlPoke] = useState(
     `https://projectpokemon.org/images/normal-sprite/bulbasaur.gif`
@@ -45,11 +56,32 @@ export default function Home({ res, initialData, initialDesc }) {
   );
   const [optionsRight, setOptionsRight] = useState("info");
   const [shiny, setShiny] = useState("red");
+  const [gameName, setGameName] = useState(
+    Object.values(descList)[0].version.name
+  );
   useEffect(() => {
     const pokeSetter = async () => {
       let response = await P.getPokemonByName(poke).then(function (r) {
         return r;
       });
+      let response2 = await P.getPokemonSpeciesByName(poke).then(function (r) {
+        return r;
+      });
+      var desc = Object.values(response2.flavor_text_entries).filter(
+        (i) => i.language.name === "en"
+      );
+      var g = Object.values(response2.genera).filter(
+        (i) => i.language.name === "en"
+      );
+      console.log("species", response2)
+      var shapeCheck = "None";
+      if (response2.shape != null) {
+        shapeCheck = response2.shape.name;
+      }
+      var habitatCheck = "None";
+      if (response2.habitat != null) {
+        habitatCheck = response2.habitat.name;
+      }
       setSelectedPokemon({
         id: response.id,
         name: response.name,
@@ -59,8 +91,8 @@ export default function Home({ res, initialData, initialDesc }) {
           Hp: response.stats[0].base_stat,
           Attack: response.stats[1].base_stat,
           Defense: response.stats[2].base_stat,
-          SpecialAttack: response.stats[3].base_stat,
-          SpecialDefence: response.stats[4].base_stat,
+          "Sp.Atk": response.stats[3].base_stat,
+          "Sp.Def": response.stats[4].base_stat,
           Speed: response.stats[5].base_stat,
         },
         sprites: {
@@ -72,21 +104,15 @@ export default function Home({ res, initialData, initialDesc }) {
         items: response.held_items,
         height: (response.height * 0.328084).toFixed(1),
         weight: (response.weight * 0.220462).toFixed(2),
+        habitat: habitatCheck,
+        shape: shapeCheck,
+        eggGroup: response2.egg_groups,
+        genera: g[0].genus,
       });
-    };
-    const descSetter = async () => {
-      var desc = await P.getPokemonSpeciesByName(poke).then(function (
-        response
-      ) {
-        return Object.values(response.flavor_text_entries).filter(
-          (i) => i.language.name === "en"
-        );
-      });
-      setDescList(desc)
+      setDescList(desc);
       setFixedDesc(desc[0].flavor_text.replace(/(\r\n|\n|\r|\f)/gm, " "));
     };
     pokeSetter();
-    descSetter();
   }, [poke]);
 
   //alot of special cases where getting gifs from projectpokemon from pokeapi names don't mix well because of different naming conventions usually having to do with hyphens (-)
@@ -203,6 +229,8 @@ export default function Home({ res, initialData, initialDesc }) {
                   fixedDesc={fixedDesc}
                   setFixedDesc={setFixedDesc}
                   descList={descList}
+                  gameName={gameName}
+                  setGameName={setGameName}
                 />
                 <OptionButtons
                   optionsRight={optionsRight}
@@ -236,15 +264,20 @@ export async function getStaticProps() {
   ) {
     return response;
   });
-  var initialDesc = await P.getPokemonSpeciesByName(res[0].name).then(function (
-    response
-  ) {
-    return Object.values(response.flavor_text_entries).filter(
-      (i) => i.language.name === "en"
-    );
-  });
-  console.log(initialDesc);
+  var initialSpecies = await P.getPokemonSpeciesByName(res[0].name).then(
+    function (response) {
+      return response;
+    }
+  );
+  // console.log(initialSpecies);
+  var initialDesc = Object.values(initialSpecies.flavor_text_entries).filter(
+    (i) => i.language.name === "en"
+  );
+  // console.log(initialDesc);
+  var initialGenera = Object.values(initialSpecies.genera).filter(
+    (i) => i.language.name === "en"
+  );
   return {
-    props: { res, initialData, initialDesc }, // will be passed to the page component as props
+    props: { res, initialData, initialDesc, initialSpecies, initialGenera }, // will be passed to the page component as props
   };
 }
